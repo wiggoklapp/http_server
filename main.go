@@ -86,7 +86,7 @@ func handleConnection(conn net.Conn) {
 		if !request.validFile() {
 			fmt.Println("File not allowed - bad Request (400)")
 		} else {
-			servePostRequest(request)
+			servePostRequest(request, conn)
 		}
 	case "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE", "PATCH":
 		fmt.Println("Not Implemented (501)")
@@ -135,21 +135,20 @@ func serveGetRequest(r Request, conn net.Conn) {
 
 }
 
-func servePostRequest(r Request) {
-	if r.noFile() {
-		fmt.Println(r.body)
+func servePostRequest(r Request, conn net.Conn) {
+	responseHeader := "HTTP/1.1 200 OK\r\nContent-Type:" + r.contentType + " \r\n\r\n"
+	conn.Write([]byte(responseHeader))
+	fmt.Println(responseHeader)
 
-		newFile, err := os.Create(r.fileName)
-		if err != nil {
-			fmt.Println("Error creating new file", err)
-		}
-		_, err = newFile.Write(r.body)
-		if err != nil {
-			fmt.Println("Error writing to new file", err)
-		}
-	} else {
-		//modify the existing file with the new data
+	newFile, err := os.Create(r.fileName)
+	if err != nil {
+		fmt.Println("Error creating new file", err)
 	}
+	_, err = newFile.Write(r.body)
+	if err != nil {
+		fmt.Println("Error writing to new file", err)
+	}
+
 }
 
 func main() {
